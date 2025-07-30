@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <title>TitanX Mobile – مواصفات الجوال العربي</title>
+  <style>
+    body { font-family: 'Tajawal', sans-serif; background: #121212; color: #e0e0e0; padding: 40px; }
+    h1 { color: #00e5ff; }
+    input, button { padding: 12px; font-size: 18px; border-radius: 6px; margin: 8px; border: none; }
+    input { width: 300px; }
+    button { background: #009688; color: #fff; cursor: pointer; }
+    #result { margin-top: 30px; background: #1e1e1e; padding: 20px; border-radius: 8px; text-align: right; }
+    img { margin-bottom: 20px; }
+    h3 { color: #00bfa8; margin-top: 25px; }
+    hr { border-color: #333; margin: 20px 0; }
+    ul { list-style: none; padding: 0; }
+    li { margin: 6px 0; }
+  </style>
+</head>
+<body>
+  <h1>مواصفات جوالي</h1>
+  <input type="text" id="phoneName" placeholder="اكتب اسم الجوال">
+  <button onclick="searchPhone()">بحث 🔍</button>
+  <div id="result"></div>
+
+  <script>
+    async function searchPhone() {
+      const name = document.getElementById('phoneName').value.trim();
+      const resultDiv = document.getElementById('result');
+      resultDiv.innerHTML = "جارٍ البحث...";
+
+      try {
+        const resp = await fetch(`https://api-mobilespecs.azharimm.dev/v2/search?query=${encodeURIComponent(name)}`);
+        const d = await resp.json();
+        if (d?.data?.phones?.length > 0) {
+          const slug = d.data.phones[0].slug;
+          const detail = await (await fetch(`https://api-mobilespecs.azharimm.dev/v2/${slug}`)).json();
+          const phone = detail.data;
+
+          let html = `<h2>${phone.phone_name}</h2>`;
+          html += `<img src="${phone.thumbnail}" alt="صورة ${phone.phone_name}" width="200"><br>`;
+          phone.specifications.forEach(sec => {
+            html += `<h3>📌 ${sec.title}</h3><ul>`;
+            sec.specs.forEach(s => {
+              html += `<li><strong>${s.key}:</strong> ${s.val.join(', ')}</li>`;
+            });
+            html += `</ul><hr>`;
+          });
+          resultDiv.innerHTML = html;
+        } else {
+          resultDiv.innerHTML = "❌ ما تم العثور على جوال بهذا الاسم.";
+        }
+      } catch {
+        resultDiv.innerHTML = "⚠️ حدث خطأ أثناء الاتصال أو جلب البيانات. حاول من جديد.";
+      }
+    }
+  </script>
+</body>
+</html>
